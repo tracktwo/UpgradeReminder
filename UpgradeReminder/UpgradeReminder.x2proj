@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>e30a7b14-03ec-40f4-868e-00ebdc974c12</Guid>
+    <Name>Upgrade Reminder</Name>
+    <Description>Adds icons to soldiers in the squad loadout screen if there are available weapon or PCS upgrades and that soldier has available slots for these items.
+
+I am a bear of very little brain and usually forget to actually [i]use[/i] the stuff I find on missions. If you do too, this might be for you.
+
+Position, size, and color of the icons is all configurable with the XComUpgradeReminder.ini file in the Config folder. If you are using the workshop, this is found in your steam/steamapps/workshop/content/268500/624726628 folder.</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>UpgradeReminder</AssemblyName>
+    <RootNamespace>UpgradeReminder</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Content\" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\UpgradeReminder\" />
+    <Folder Include="Src\UpgradeReminder\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\XComUpgradeReminder.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\UICollection_UpgradeReminder.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Config\XComEditor.ini" />
+    <Content Include="Config\XComEngine.ini" />
+    <Content Include="Config\XComGame.ini" />
+    <Content Include="Src\UpgradeReminder\Classes\UIUpgradeReminder.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\UpgradeReminder\Classes\X2DownloadableContentInfo_UpgradeReminder.uc" />
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>
