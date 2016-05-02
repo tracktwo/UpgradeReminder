@@ -23,80 +23,58 @@ var const config String PCS_COLOR;
 // of whether or not we're actually going to show it.
 var array<UIPanel> WeaponIcons;
 var array<UIPanel> PCSIcons;
+var array<UISquadSelect_ListItem> CachedListItems;
 
 // Destroy all current icons.
 function DeleteAllIcons()
 {
-	local int i;
+    local int i;
 
-	`Log("+++ Destroying all icons");
+    `Log("+++ Destroying all icons");
     for (i = 0; i < WeaponIcons.Length; ++i) 
     {
-		WeaponIcons[i].Remove();
+        WeaponIcons[i].Remove();
     }
 
-	for (i = 0; i < PCSIcons.Length; ++i) 
+    for (i = 0; i < PCSIcons.Length; ++i) 
     {
-		PCSIcons[i].Remove();
+        PCSIcons[i].Remove();
     }
 
-	WeaponIcons.Length = 0;
-	PCSIcons.Length =0;
+    WeaponIcons.Length = 0;
+    PCSIcons.Length = 0;
+    CachedListItems.Length = 0;
 }
 
 // Hide all the icons
 function HideAllIcons()
 {
-	local int i;
-
-	`Log("+++ Hiding all icons");
-    for (i = 0; i < WeaponIcons.Length; ++i) 
-    {
-		WeaponIcons[i].Hide();
-    }
-
-	for (i = 0; i < PCSIcons.Length; ++i) 
-    {
-		PCSIcons[i].Hide();
-    }
-}
-
-// Rebuild all the icons for the squad. The passed parameter is used to tell us how many slots we have.
-function CreateIcons(UISquadSelect Squad)
-{
-    local UISquadSelect_ListItem ListItem;
     local int i;
 
-	// The icon count doesn't match the old count. Delete all the old ones and recreate new ones.
-	// (Strictly speaking I think the value can only ever *increase* so we should only need to add new icons
-	// to the end instead of deleting them all, but whatevs.)
-    if (Squad.m_kSlotList.ItemCount != WeaponIcons.Length || Squad.m_kSlotList.ItemCount != PCSIcons.Length)
+    `Log("+++ Hiding all icons");
+    for (i = 0; i < WeaponIcons.Length; ++i) 
     {
-		`Log("+++ List size changed.");
-		DeleteAllIcons();
-    
-		for (i = 0; i < Squad.m_kSlotList.ItemCount; ++i)
-		{
-			ListItem = UISquadSelect_ListItem(Squad.m_kSlotList.GetItem(i));
-			WeaponIcons.AddItem(CreateWeaponIcon(ListItem));
-			PCSIcons.AddItem(CreatePCSIcon(ListItem));
-		}
-	}
-}
+        WeaponIcons[i].Hide();
+    }
 
+    for (i = 0; i < PCSIcons.Length; ++i) 
+    {
+        PCSIcons[i].Hide();
+    }
+}
 
 // Create one weapon icon, parented to the given squad list item.
 function UIImage CreateWeaponIcon(UISquadSelect_ListItem ListItem)
 {
     local UIImage AttentionIcon;
 
-	AttentionIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(, 
-		"img:///UICollection_UpgradeReminder.WeaponUpgrade");
-	AttentionIcon.SetPosition(WEAPON_X_POSITION, WEAPON_Y_POSITION);
-	AttentionIcon.SetScale(WEAPON_SCALE);
-	AttentionIcon.SetColor(WEAPON_COLOR);
-	AttentionIcon.Hide(); 
-	return AttentionIcon;
+    AttentionIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(, 
+        "img:///UICollection_UpgradeReminder.WeaponUpgrade");
+    AttentionIcon.SetPosition(WEAPON_X_POSITION, WEAPON_Y_POSITION);
+    AttentionIcon.SetScale(WEAPON_SCALE);
+    AttentionIcon.SetColor(WEAPON_COLOR);
+    AttentionIcon.Hide(); 
+    return AttentionIcon;
 }
 
 // Create one PCS icon, parented to the given squad list item.
@@ -104,13 +82,13 @@ function UIImage CreatePCSIcon(UISquadSelect_ListItem ListItem)
 {
     local UIImage PCSIcon;
 
-	PCSIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(, 
-		"img:///UICollection_UpgradeReminder.CombatSim");
-	PCSIcon.SetPosition(PCS_X_POSITION, PCS_Y_POSITION);
-	PCSIcon.SetScale(PCS_SCALE);
-	PCSIcon.SetColor(PCS_COLOR);
-	PCSIcon.Hide(); 
-	return PCSIcon;
+    PCSIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(, 
+        "img:///UICollection_UpgradeReminder.CombatSim");
+    PCSIcon.SetPosition(PCS_X_POSITION, PCS_Y_POSITION);
+    PCSIcon.SetScale(PCS_SCALE);
+    PCSIcon.SetColor(PCS_COLOR);
+    PCSIcon.Hide(); 
+    return PCSIcon;
 }
 
 // UI has started up: refresh our icon list
@@ -157,72 +135,81 @@ event OnRemoved(UIScreen Screen)
 // Refresh the icon state
 function RefreshIcons(UISquadSelect SquadSelect)
 {
-	local UISquadSelect_ListItem ListItem;
-	local XComGameState_Unit Unit;
-	local int i;
-	`Log("+++ Refreshing icons");
+    local UISquadSelect_ListItem ListItem;
+    local XComGameState_Unit Unit;
+    local int i;
+    local UIPanel Panel;
+    local array<UIPanel> ListItemPanels;
+    `Log("+++ Refreshing icons");
 
-	// Create the icons (if we need to.)
-	CreateIcons(SquadSelect);
-	
-	// m_kSlotList holds the squad selection slots. Iterate over it to test each squad member and 
-	// enable or disable the icons as appropriate.
-	for (i = 0; i < SquadSelect.m_kSlotList.ItemCount; ++i) 
-	{
-		ListItem = UISquadSelect_ListItem(SquadSelect.m_kSlotList.GetItem(i));
+    // Iterate the children of the squad select looking for the list items.
+    SquadSelect.GetChildrenOfType(class'UISquadSelect_ListItem', ListItemPanels);
+    foreach ListItemPanels(Panel)
+    {
+        ListItem = UISquadSelect_ListItem(Panel);
 
-		// Look up the unit associated with this slot.
-		Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ListItem.GetUnitRef().ObjectID));
+        // Have we already handled this list item?
+        i = CachedListItems.Find(ListItem);
+        if (i == -1)
+        {
+            // This one is new. Create new icons and cache this item.
+            WeaponIcons.AddItem(CreateWeaponIcon(ListItem));
+            PCSIcons.AddItem(CreatePCSIcon(ListItem));
+            CachedListItems.AddItem(ListItem);
+            i = CachedListItems.Length - 1;
+        }
 
-		// Now show or hide the icon depending on the availability of upgrades.
-		if (ShouldShowWeaponUpgradeIcon(Unit))
-		{
-			WeaponIcons[i].Show();
-		}
-		else
-		{
-			WeaponIcons[i].Hide();
-		}
+        // Look up the unit associated with this slot.
+        Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ListItem.GetUnitRef().ObjectID));
 
-		if (ShouldShowPCSIcon(Unit))
-		{
-			PCSIcons[i].Show();
-		}
-		else
-		{
-			PCSIcons[i].Hide();
-		}
-	}
+        // Now show or hide the icon depending on the availability of upgrades.
+        if (ShouldShowWeaponUpgradeIcon(Unit))
+        {
+            WeaponIcons[i].Show();
+        }
+        else
+        {
+            WeaponIcons[i].Hide();
+        }
+
+        if (ShouldShowPCSIcon(Unit))
+        {
+            PCSIcons[i].Show();
+        }
+        else
+        {
+            PCSIcons[i].Hide();
+        }
+    }
 }
 
 // Determine whether or not to show the weapon upgrade for this unit. Fortunately there is a useful utility that
 // already figures all this out for us: UIUtilities_Strategy.GetWeaponUpgradeAvailability().
 function bool ShouldShowWeaponUpgradeIcon(XComGameState_Unit Unit)
 {
-	local TWeaponUpgradeAvailabilityData WeaponUpgradeAvailabilityData;
-	
-	class'UIUtilities_Strategy'.static.GetWeaponUpgradeAvailability(Unit, WeaponUpgradeAvailabilityData);
+    local TWeaponUpgradeAvailabilityData WeaponUpgradeAvailabilityData;
 
-	// Return true if a) we have weapon upgrades in stock, b) the unit's weapon has upgrade slots open, and
-	// c) We have researched the modular weapons tech.
-	return WeaponUpgradeAvailabilityData.bHasWeaponUpgrades && 
-			WeaponUpgradeAvailabilityData.bHasWeaponUpgradeSlotsAvailable && 
-			WeaponUpgradeAvailabilityData.bHasModularWeapons;
+    class'UIUtilities_Strategy'.static.GetWeaponUpgradeAvailability(Unit, WeaponUpgradeAvailabilityData);
+
+    return WeaponUpgradeAvailabilityData.bHasWeaponUpgrades &&
+            WeaponUpgradeAvailabilityData.bHasWeaponUpgradeSlotsAvailable &&
+            WeaponUpgradeAvailabilityData.bHasModularWeapons;
 }
 
 // Determine whether or not to show the PCS upgrade for this unit. Just like for weapons there is a utility
 // that figures this out for us: UIUtilities_Strategy.GetPCSAvailability().
 function bool ShouldShowPCSIcon(XComGameState_Unit Unit)
 {
-	local TPCSAvailabilityData PCSAvailabilityData;
+    local TPCSAvailabilityData PCSAvailabilityData;
 
-	class 'UIUtilities_Strategy'.static.GetPCSAvailability(Unit, PCSAvailabilityData);
+    class 'UIUtilities_Strategy'.static.GetPCSAvailability(Unit, PCSAvailabilityData);
 
-	// Return true if a) we have PCS implants in stock and b) the unit has an open PCS slot.
-	return (PCSAvailabilityData.bHasNeurochipImplantsInInventory && PCSAvailabilityData.bHasCombatSimsSlotsAvailable);
+    // Return true if a) we have PCS implants in stock and b) the unit has an open PCS slot.
+    return (PCSAvailabilityData.bHasNeurochipImplantsInInventory && PCSAvailabilityData.bHasCombatSimsSlotsAvailable);
 }
 
 defaultproperties
 {
-	// UISquadSelect is the name of the class we want to pay attention to.
+    // UISquadSelect is the name of the class we want to pay attention to, but it may be overridden by
+    // another mod so we can't rely on it being there.
 }
