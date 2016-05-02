@@ -116,41 +116,52 @@ function UIImage CreatePCSIcon(UISquadSelect_ListItem ListItem)
 // UI has started up: refresh our icon list
 event OnInit(UIScreen Screen)
 {
-	RefreshIcons(Screen);
+    local UISquadSelect SquadSelect;
+
+    SquadSelect = UISquadSelect(Screen);
+    if (SquadSelect != none)
+        RefreshIcons(SquadSelect);
 }
 
 // Regained focus: refresh our icon list
 event OnReceiveFocus(UIScreen Screen)
 {
-	RefreshIcons(Screen);
+    local UISquadSelect SquadSelect;
+
+    SquadSelect = UISquadSelect(Screen);
+    if (SquadSelect != none)
+        RefreshIcons(SquadSelect);
 }
 
 // Lost focus: Hide all the icons (likely unnecessary, as the parent panels hide
 // themselves which cause all children to be hidden too.)
 event OnLoseFocus(UIScreen Screen)
 {
-	HideAllIcons();
+    local UISquadSelect SquadSelect;
+
+    SquadSelect = UISquadSelect(Screen);
+    if (SquadSelect != none)
+        HideAllIcons();
 }
 
 // UI removed. Destroy all the icons.
 event OnRemoved(UIScreen Screen)
 {
-	DeleteAllIcons();
+    local UISquadSelect SquadSelect;
+
+    SquadSelect = UISquadSelect(Screen);
+    if (SquadSelect != none)
+        DeleteAllIcons();
 }
 
 // Refresh the icon state
-function RefreshIcons(UIScreen Screen)
+function RefreshIcons(UISquadSelect SquadSelect)
 {
-	local UISquadSelect SquadSelect;
 	local UISquadSelect_ListItem ListItem;
 	local XComGameState_Unit Unit;
 	local int i;
 	`Log("+++ Refreshing icons");
 
-	// We requested only to be notified about the squad select screen, so this should be
-	// an instance of UISquadSelect.
-	SquadSelect = UISquadSelect(Screen);
-	
 	// Create the icons (if we need to.)
 	CreateIcons(SquadSelect);
 	
@@ -214,5 +225,4 @@ function bool ShouldShowPCSIcon(XComGameState_Unit Unit)
 defaultproperties
 {
 	// UISquadSelect is the name of the class we want to pay attention to.
-	ScreenClass=class'UISquadSelect'
 }
