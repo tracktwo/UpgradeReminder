@@ -12,6 +12,9 @@ Position, size, and color of the icons is all configurable with the XComUpgradeR
     <AssemblyName>UpgradeReminder</AssemblyName>
     <RootNamespace>UpgradeReminder</RootNamespace>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Folder Include="Config\" />
     <Folder Include="Content\" />
