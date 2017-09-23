@@ -34,50 +34,8 @@ var const config String PCS_COLOR;
 // Config variable outlining which upgrades replace which other ones.
 var config array<WeaponUpgradeChain> WeaponUpgradeChains;
 
-// Lists of icons we're created. We create one icon for each member of the squad regardless
-// of whether or not we're actually going to show it.
-var array<UIPanel> WeaponIcons;
-var array<UIPanel> PCSIcons;
-
-// Cached copy of template names for items we have in inventory
+// Cached copy of template names for items we have in inventory.
 var array<Name> AvailableUpgrades;
-
-// Destroy all current icons.
-function DeleteAllIcons()
-{
-    local int i;
-
-    `Log("+++ Destroying all icons");
-    for (i = 0; i < WeaponIcons.Length; ++i) 
-    {
-        WeaponIcons[i].Remove();
-    }
-
-    for (i = 0; i < PCSIcons.Length; ++i) 
-    {
-        PCSIcons[i].Remove();
-    }
-
-    WeaponIcons.Length = 0;
-    PCSIcons.Length = 0;
-}
-
-// Hide all the icons
-function HideAllIcons()
-{
-    local int i;
-
-    `Log("+++ Hiding all icons");
-    for (i = 0; i < WeaponIcons.Length; ++i) 
-    {
-        WeaponIcons[i].Hide();
-    }
-
-    for (i = 0; i < PCSIcons.Length; ++i) 
-    {
-        PCSIcons[i].Hide();
-    }
-}
 
 // Create one weapon icon, parented to the given squad list item.
 function UIImage CreateWeaponIcon(UISquadSelect_ListItem ListItem)
@@ -149,33 +107,6 @@ event OnReceiveFocus(UIScreen Screen)
     }
 }
 
-// Lost focus: Hide all the icons (likely unnecessary, as the parent panels hide
-// themselves which cause all children to be hidden too.)
-event OnLoseFocus(UIScreen Screen)
-{
-    local UISquadSelect SquadSelect;
-
-    SquadSelect = UISquadSelect(Screen);
-    if (SquadSelect != none)
-	{
-		`Log("UISquadSelect OnLoseFocus");
-     //   HideAllIcons();
-	}
-}
-
-// UI removed. Destroy all the icons.
-event OnRemoved(UIScreen Screen)
-{
-    local UISquadSelect SquadSelect;
-
-    SquadSelect = UISquadSelect(Screen);
-    if (SquadSelect != none)
-	{
-		`Log("UISquadSelect OnRemoved");
-       // DeleteAllIcons();
-	}
-}
-
 function RefreshUnitIcon(UISquadSelect_ListItem ListItem, bool Show, name IconName)
 {
 	local UIImage Image;
@@ -184,11 +115,16 @@ function RefreshUnitIcon(UISquadSelect_ListItem ListItem, bool Show, name IconNa
 	if (Show)
 	{
 		if (Image == none)
+		{
+			`Log("Creating new icon " $ IconName $ " to show");
 			Image = (IconName == WeaponIconName) ? CreateWeaponIcon(ListItem) : CreatePCSIcon(ListItem);
+		}
+		`Log("Showing icon " $ IconName);
 		Image.Show();
 	}
 	else if (Image != none)
 	{
+		`Log("Found existing icon " $ IconName $ " to hide");
 		Image.Hide();
 	}
 }
