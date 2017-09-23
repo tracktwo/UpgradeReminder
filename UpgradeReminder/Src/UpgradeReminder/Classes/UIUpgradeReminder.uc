@@ -23,11 +23,15 @@ const PCSIconName = 'UR_PCSIcon';
 // Config variables for placement, size, and color of the weapon and PCS icons
 var const config int WEAPON_X_POSITION;
 var const config int WEAPON_Y_POSITION;
+var const config int WOTC_WEAPON_X_POSITION;
+var const config int WOTC_WEAPON_Y_POSITION;
 var const config float WEAPON_SCALE;
 var const config String WEAPON_COLOR;
 
 var const config int PCS_X_POSITION;
 var const config int PCS_Y_POSITION;
+var const config int WOTC_PCS_X_POSITION;
+var const config int WOTC_PCS_Y_POSITION;
 var const config float PCS_SCALE;
 var const config String PCS_COLOR;
 
@@ -37,6 +41,21 @@ var config array<WeaponUpgradeChain> WeaponUpgradeChains;
 // Cached copy of template names for items we have in inventory.
 var array<Name> AvailableUpgrades;
 
+// Try to detect if we're running in vanilla XCOM2 or War of the Chosen in a way
+// that won't break in vanilla. The main problem is the positioning of the icons,
+// because the soldier bond icon is using the same location historically used for
+// the PCS icon.
+//
+// Just check to see if there is a child named 'bondIconMC' somewhere under the list
+// item. If so, this is probably WotC (unless someone makes a vanilla XCOM2 mod that
+// adds a child with this name). This is a recursive search so it should work fine
+// even if UISquadSelect_ListItem is overridden as long as the overriding class
+// inherits from it.
+function bool DetectWotc(UISquadSelect_ListItem ListItem)
+{
+	return ListItem.GetChildByName('bondIconMC', false) != none;
+}
+
 // Create one weapon icon, parented to the given squad list item.
 function UIImage CreateWeaponIcon(UISquadSelect_ListItem ListItem)
 {
@@ -44,7 +63,7 @@ function UIImage CreateWeaponIcon(UISquadSelect_ListItem ListItem)
 
     AttentionIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(WeaponIconName,
         "img:///UICollection_UpgradeReminder.WeaponUpgrade");
-    AttentionIcon.SetPosition(WEAPON_X_POSITION, WEAPON_Y_POSITION);
+    AttentionIcon.SetPosition(DetectWotc(ListItem) ? WOTC_WEAPON_X_POSITION : WEAPON_X_POSITION, WEAPON_Y_POSITION);
     AttentionIcon.SetScale(WEAPON_SCALE);
     AttentionIcon.SetColor(WEAPON_COLOR);
     AttentionIcon.Hide();
@@ -58,7 +77,7 @@ function UIImage CreatePCSIcon(UISquadSelect_ListItem ListItem)
 
     PCSIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(PCSIconName,
         "img:///UICollection_UpgradeReminder.CombatSim");
-    PCSIcon.SetPosition(PCS_X_POSITION, PCS_Y_POSITION);
+    PCSIcon.SetPosition(DetectWotc(ListItem) ? WOTC_PCS_X_POSITION : PCS_X_POSITION, PCS_Y_POSITION);
     PCSIcon.SetScale(PCS_SCALE);
     PCSIcon.SetColor(PCS_COLOR);
     PCSIcon.Hide();
@@ -73,7 +92,6 @@ event OnInit(UIScreen Screen)
     SquadSelect = UISquadSelect(Screen);
     if (SquadSelect != none)
     {
-		`Log("UISquadSelect OnInit");
         // We have a squad select UI. But don't refresh the icons immediately as this can occasionally
         // cause graphical issues.
         SquadSelect.SetTimer(1.0f, false, 'DelayedRefresh', self);
@@ -101,7 +119,6 @@ event OnReceiveFocus(UIScreen Screen)
     SquadSelect = UISquadSelect(Screen);
     if (SquadSelect != none)
     {
-		`Log("UISquadSelect OnReceiveFocus");
         RefreshAvailableUpgrades();
         RefreshIcons(SquadSelect);
     }
