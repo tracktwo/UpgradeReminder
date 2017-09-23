@@ -17,6 +17,9 @@ struct WeaponUpgradeChain
     var array<Name> ReplacedBy;
 };
 
+const WeaponIconName = 'UR_WeaponIcon';
+const PCSIconName = 'UR_PCSIcon';
+
 // Config variables for placement, size, and color of the weapon and PCS icons
 var const config int WEAPON_X_POSITION;
 var const config int WEAPON_Y_POSITION;
@@ -35,7 +38,6 @@ var config array<WeaponUpgradeChain> WeaponUpgradeChains;
 // of whether or not we're actually going to show it.
 var array<UIPanel> WeaponIcons;
 var array<UIPanel> PCSIcons;
-var array<UISquadSelect_ListItem> CachedListItems;
 
 // Cached copy of template names for items we have in inventory
 var array<Name> AvailableUpgrades;
@@ -58,7 +60,6 @@ function DeleteAllIcons()
 
     WeaponIcons.Length = 0;
     PCSIcons.Length = 0;
-    CachedListItems.Length = 0;
 }
 
 // Hide all the icons
@@ -83,12 +84,12 @@ function UIImage CreateWeaponIcon(UISquadSelect_ListItem ListItem)
 {
     local UIImage AttentionIcon;
 
-    AttentionIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(, 
+    AttentionIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(WeaponIconName,
         "img:///UICollection_UpgradeReminder.WeaponUpgrade");
     AttentionIcon.SetPosition(WEAPON_X_POSITION, WEAPON_Y_POSITION);
     AttentionIcon.SetScale(WEAPON_SCALE);
     AttentionIcon.SetColor(WEAPON_COLOR);
-    AttentionIcon.Hide(); 
+    AttentionIcon.Hide();
     return AttentionIcon;
 }
 
@@ -97,12 +98,12 @@ function UIImage CreatePCSIcon(UISquadSelect_ListItem ListItem)
 {
     local UIImage PCSIcon;
 
-    PCSIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(, 
+    PCSIcon = ListItem.DynamicContainer.Spawn(class 'UIImage', ListItem.DynamicContainer).InitImage(PCSIconName,
         "img:///UICollection_UpgradeReminder.CombatSim");
     PCSIcon.SetPosition(PCS_X_POSITION, PCS_Y_POSITION);
     PCSIcon.SetScale(PCS_SCALE);
     PCSIcon.SetColor(PCS_COLOR);
-    PCSIcon.Hide(); 
+    PCSIcon.Hide();
     return PCSIcon;
 }
 
@@ -114,6 +115,7 @@ event OnInit(UIScreen Screen)
     SquadSelect = UISquadSelect(Screen);
     if (SquadSelect != none)
     {
+		`Log("UISquadSelect OnInit");
         // We have a squad select UI. But don't refresh the icons immediately as this can occasionally
         // cause graphical issues.
         SquadSelect.SetTimer(1.0f, false, 'DelayedRefresh', self);
@@ -141,6 +143,7 @@ event OnReceiveFocus(UIScreen Screen)
     SquadSelect = UISquadSelect(Screen);
     if (SquadSelect != none)
     {
+		`Log("UISquadSelect OnReceiveFocus");
         RefreshAvailableUpgrades();
         RefreshIcons(SquadSelect);
     }
@@ -154,7 +157,10 @@ event OnLoseFocus(UIScreen Screen)
 
     SquadSelect = UISquadSelect(Screen);
     if (SquadSelect != none)
-        HideAllIcons();
+	{
+		`Log("UISquadSelect OnLoseFocus");
+     //   HideAllIcons();
+	}
 }
 
 // UI removed. Destroy all the icons.
@@ -164,7 +170,27 @@ event OnRemoved(UIScreen Screen)
 
     SquadSelect = UISquadSelect(Screen);
     if (SquadSelect != none)
-        DeleteAllIcons();
+	{
+		`Log("UISquadSelect OnRemoved");
+       // DeleteAllIcons();
+	}
+}
+
+function RefreshUnitIcon(UISquadSelect_ListItem ListItem, bool Show, name IconName)
+{
+	local UIImage Image;
+
+	Image = UIImage(ListItem.DynamicContainer.GetChildByName(IconName, false));
+	if (Show)
+	{
+		if (Image == none)
+			Image = (IconName == WeaponIconName) ? CreateWeaponIcon(ListItem) : CreatePCSIcon(ListItem);
+		Image.Show();
+	}
+	else if (Image != none)
+	{
+		Image.Hide();
+	}
 }
 
 // Refresh the icon state
@@ -172,9 +198,9 @@ function RefreshIcons(UISquadSelect SquadSelect)
 {
     local UISquadSelect_ListItem ListItem;
     local XComGameState_Unit Unit;
-    local int i;
     local UIPanel Panel;
     local array<UIPanel> ListItemPanels;
+
     `Log("+++ Refreshing icons");
 
     // Iterate the children of the squad select looking for the list items.
@@ -183,38 +209,12 @@ function RefreshIcons(UISquadSelect SquadSelect)
     {
         ListItem = UISquadSelect_ListItem(Panel);
 
-        // Have we already handled this list item?
-        i = CachedListItems.Find(ListItem);
-        if (i == -1)
-        {
-            // This one is new. Create new icons and cache this item.
-            WeaponIcons.AddItem(CreateWeaponIcon(ListItem));
-            PCSIcons.AddItem(CreatePCSIcon(ListItem));
-            CachedListItems.AddItem(ListItem);
-            i = CachedListItems.Length - 1;
-        }
-
         // Look up the unit associated with this slot.
         Unit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ListItem.GetUnitRef().ObjectID));
 
         // Now show or hide the icon depending on the availability of upgrades.
-        if (ShouldShowWeaponUpgradeIcon(Unit))
-        {
-            WeaponIcons[i].Show();
-        }
-        else
-        {
-            WeaponIcons[i].Hide();
-        }
-
-        if (ShouldShowPCSIcon(Unit))
-        {
-            PCSIcons[i].Show();
-        }
-        else
-        {
-            PCSIcons[i].Hide();
-        }
+        RefreshUnitIcon(ListItem, ShouldShowWeaponUpgradeIcon(Unit), WeaponIconName);
+		RefreshUnitIcon(ListItem, ShouldShowPCSIcon(Unit), PCSIconName);
     }
 }
 
