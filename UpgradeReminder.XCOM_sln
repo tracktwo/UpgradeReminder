@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # XCOM ModBuddy Solution File, Format Version 11.00
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{5DAE07AF-E217-45C1-8DE7-FF99D6011E8A}") = "UpgradeReminder", "UpgradeReminder\UpgradeReminder.x2proj", "{154BF841-7707-4AFF-9FBF-5CC5228F6252}"
+Project("{5DAE07AF-E217-45C1-8DE7-FF99D6011E8A}") = "UpgradeReminder", "UpgradeReminder\UpgradeReminder.x2proj", "{CA6CD6A6-7B17-4D3B-A592-6AF4BE8B7EEB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Default|XCOM 2 = Default|XCOM 2
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{154BF841-7707-4AFF-9FBF-5CC5228F6252}.Debug|XCOM 2.ActiveCfg = Debug|XCOM 2
-		{154BF841-7707-4AFF-9FBF-5CC5228F6252}.Debug|XCOM 2.Build.0 = Debug|XCOM 2
-		{154BF841-7707-4AFF-9FBF-5CC5228F6252}.Default|XCOM 2.ActiveCfg = Default|XCOM 2
-		{154BF841-7707-4AFF-9FBF-5CC5228F6252}.Default|XCOM 2.Build.0 = Default|XCOM 2
+		{CA6CD6A6-7B17-4D3B-A592-6AF4BE8B7EEB}.Debug|XCOM 2.ActiveCfg = Debug|XCOM 2
+		{CA6CD6A6-7B17-4D3B-A592-6AF4BE8B7EEB}.Debug|XCOM 2.Build.0 = Debug|XCOM 2
+		{CA6CD6A6-7B17-4D3B-A592-6AF4BE8B7EEB}.Default|XCOM 2.ActiveCfg = Default|XCOM 2
+		{CA6CD6A6-7B17-4D3B-A592-6AF4BE8B7EEB}.Default|XCOM 2.Build.0 = Default|XCOM 2
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

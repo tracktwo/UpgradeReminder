@@ -133,15 +133,12 @@ function RefreshUnitIcon(UISquadSelect_ListItem ListItem, bool Show, name IconNa
 	{
 		if (Image == none)
 		{
-			`Log("Creating new icon " $ IconName $ " to show");
 			Image = (IconName == WeaponIconName) ? CreateWeaponIcon(ListItem) : CreatePCSIcon(ListItem);
 		}
-		`Log("Showing icon " $ IconName);
 		Image.Show();
 	}
 	else if (Image != none)
 	{
-		`Log("Found existing icon " $ IconName $ " to hide");
 		Image.Hide();
 	}
 }
@@ -153,8 +150,6 @@ function RefreshIcons(UISquadSelect SquadSelect)
     local XComGameState_Unit Unit;
     local UIPanel Panel;
     local array<UIPanel> ListItemPanels;
-
-    `Log("+++ Refreshing icons");
 
     // Iterate the children of the squad select looking for the list items.
     SquadSelect.GetChildrenOfType(class'UISquadSelect_ListItem', ListItemPanels);
